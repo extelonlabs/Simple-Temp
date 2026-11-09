@@ -12,7 +12,7 @@ internal static class AutoStart
 {
     public const string MiniArg = "--mini";
 
-    private const string TaskName = "Simple Temp Autostart";
+    public const string TaskName = "Simple Temp Autostart";
     private const int CreateOrUpdate = 6;
     private const int InteractiveToken = 3;
 
@@ -34,14 +34,43 @@ internal static class AutoStart
 
     public static void Set(bool on, bool mini)
     {
-        var folder = Folder();
         if (on)
         {
-            folder.RegisterTask(TaskName, TaskXml(mini), CreateOrUpdate, null, null, InteractiveToken);
+            string args = mini ? $"{AdminTask.FromTaskArg} {MiniArg}" : AdminTask.FromTaskArg;
+            RegisterTask(TaskName, args, atSignIn: true, "Starts Simple Temp when you sign in.");
         }
         else if (Read().On)
         {
-            folder.DeleteTask(TaskName, 0);
+            DeleteTask(TaskName);
+        }
+    }
+
+    public static void RegisterTask(string name, string args, bool atSignIn, string description) =>
+        Folder().RegisterTask(name, TaskXml(args, atSignIn, description), CreateOrUpdate, null, null, InteractiveToken);
+
+    /// <summary>Ends the app if this task started it. Fine if the task doesn't exist.</summary>
+    public static void StopTask(string name)
+    {
+        try
+        {
+            Folder().GetTask(name).Stop(0);
+        }
+        catch (Exception ex) when (ex is COMException or FileNotFoundException)
+        {
+            // No such task, so nothing to stop.
+        }
+    }
+
+    /// <summary>Fine if the task doesn't exist.</summary>
+    public static void DeleteTask(string name)
+    {
+        try
+        {
+            Folder().DeleteTask(name, 0);
+        }
+        catch (Exception ex) when (ex is COMException or FileNotFoundException)
+        {
+            // No such task, so nothing to delete.
         }
     }
 
@@ -52,19 +81,21 @@ internal static class AutoStart
         return service.GetFolder("\\");
     }
 
-    private static string TaskXml(bool mini)
+    private static string TaskXml(string args, bool atSignIn, string description)
     {
         using var identity = WindowsIdentity.GetCurrent();
         string user = SecurityElement.Escape(identity.Name);
         string exe = SecurityElement.Escape(AdminTask.InstalledExe);
         string dir = SecurityElement.Escape(Path.GetDirectoryName(AdminTask.InstalledExe)!);
-        string args = mini ? $"{AdminTask.FromTaskArg} {MiniArg}" : AdminTask.FromTaskArg;
+        string triggers = atSignIn
+            ? $"<Triggers><LogonTrigger><Enabled>true</Enabled><UserId>{user}</UserId></LogonTrigger></Triggers>"
+            : "<Triggers />";
 
         // No time limit: by default Windows would close the app after 3 days.
         return $"""
             <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-              <RegistrationInfo><Description>Starts Simple Temp when you sign in.</Description></RegistrationInfo>
-              <Triggers><LogonTrigger><Enabled>true</Enabled><UserId>{user}</UserId></LogonTrigger></Triggers>
+              <RegistrationInfo><Description>{description}</Description></RegistrationInfo>
+              {triggers}
               <Principals>
                 <Principal id="Author">
                   <UserId>{user}</UserId>
