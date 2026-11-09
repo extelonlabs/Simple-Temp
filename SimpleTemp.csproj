@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Temperature</RootNamespace>
+    <AssemblyName>SimpleTemp</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>assets\SimpleTemp.ico</ApplicationIcon>
+    <Product>Simple Temp</Product>
+    <AssemblyTitle>Simple Temp</AssemblyTitle>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <!-- One exe you can double-click. It carries its own .NET, so it is big but always runs.
+       The installed app runs as admin with no prompt, so it must only load code from its
+       protected folder: nothing gets unpacked to a user folder, and no startup hooks
+       (code that .NET can be told to load at start, through a setting any program can change). -->
+  <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <StartupHookSupport>false</StartupHookSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <EmbeddedResource Include="assets\SimpleTemp.ico" LogicalName="SimpleTemp.ico" />
+  </ItemGroup>
+
+</Project>

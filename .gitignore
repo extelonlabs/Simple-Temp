@@ -1,0 +1,11 @@
+bin/
+obj/
+dist/
+publish/
+release/
+.backup/
+.vs/
+*.user
+*.log
+.env
+.env.*
