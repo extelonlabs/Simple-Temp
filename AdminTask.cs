@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace Temperature;
 
 /// <summary>
-/// install.ps1 makes a Windows scheduled task that starts the app with admin rights and no prompt.
+/// The installer makes a Windows scheduled task that starts the app with admin rights and no prompt.
 /// A normal start of the installed app asks that task to start the real window, then quits.
 /// </summary>
 internal static class AdminTask
@@ -13,7 +13,7 @@ internal static class AdminTask
     /// <summary>The task passes this. It stops the app from asking the task again, forever.</summary>
     public const string FromTaskArg = "--from-task";
 
-    private const string TaskName = "Simple Temp";
+    public const string TaskName = "Simple Temp";
 
     public static string InstalledExe { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Simple Temp", "SimpleTemp.exe");
@@ -28,6 +28,12 @@ internal static class AdminTask
         if (MainForm.IsAdmin() || !IsInstalledCopy)
             return false;
 
+        return RunTask();
+    }
+
+    /// <summary>Asks Windows to start the app through the task. True if the task started.</summary>
+    public static bool RunTask()
+    {
         try
         {
             // You just clicked this copy, so it may take focus. This passes that on to the new window.
