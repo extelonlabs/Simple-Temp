@@ -43,3 +43,7 @@ Then run `install.cmd`. It installs the build from `dist`.
 ## Credits
 
 Sensor reading comes from [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+## License
+
+[MIT](LICENSE). The third-party parts keep their own licenses.
