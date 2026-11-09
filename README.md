@@ -4,6 +4,8 @@
 
 <p align="center">A small Windows app that shows your CPU and GPU temperature, CPU and GPU usage, and RAM usage.</p>
 
+<p align="center"><img src="assets/screenshot.png" width="402" alt="The Simple Temp window, showing CPU and GPU temperature and usage, and RAM usage"></p>
+
 ## What you get
 
 - **Full window:** all five numbers, with bars. Updates every second.
