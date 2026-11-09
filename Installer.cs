@@ -295,8 +295,9 @@ internal static class Installer
         MessageBox.Show("Simple Temp is removed.", Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
 
         // A running exe can't delete itself, so a hidden helper does it a moment after this one quits.
+        // It tries a few times, because something else can hold the folder open for a moment.
         var cleanup = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"),
-            $"/c ping -n 3 127.0.0.1 >nul & rd /s /q \"{InstallDir}\"")
+            $"/c ping -n 3 127.0.0.1 >nul & for /L %i in (1,1,5) do @(rd /s /q \"{InstallDir}\" 2>nul & ping -n 2 127.0.0.1 >nul)")
         {
             UseShellExecute = false,
             CreateNoWindow = true,
