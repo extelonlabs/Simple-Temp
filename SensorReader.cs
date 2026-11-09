@@ -9,8 +9,8 @@ public sealed record Reading(
     float? RamLoad, float? RamUsedGb, float? RamTotalGb);
 
 /// <summary>
-/// Reads the sensors. Build it and use it on one background thread:
-/// opening it can take a few seconds.
+/// Reads CPU, GPU and RAM values through LibreHardwareMonitor.
+/// Build it and use it on one background thread: opening it can take a few seconds.
 /// </summary>
 public sealed class SensorReader : IDisposable
 {

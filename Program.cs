@@ -8,13 +8,20 @@ internal static class Program
     private static int Main(string[] args)
     {
         if (args.Contains("--probe")) return Probe();
-
-        bool fromTask = args.Contains(AdminTask.FromTaskArg);
-        if (!fromTask && AdminTask.TryStart()) return 0;
+        if (args.Contains(Installer.InstallArg)) return Installer.CopyToProgramFiles();
 
         Application.SetHighDpiMode(HighDpiMode.SystemAware);
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
+
+        if (args.Contains(Installer.FinishArg)) return Installer.Finish();
+        if (args.Contains(Installer.UninstallArg)) return Installer.Uninstall();
+
+        bool fromTask = args.Contains(AdminTask.FromTaskArg);
+        bool skipInstall = args.Contains(Installer.NoInstallArg);
+        if (!fromTask && !skipInstall && !AdminTask.IsInstalledCopy && Installer.RunFromDownload()) return 0;
+        if (!fromTask && AdminTask.TryStart()) return 0;
+
         bool startMini = args.Contains(AutoStart.MiniArg);
         Application.Run(new MainForm(bringToFront: fromTask && !startMini, startMini));
         return 0;

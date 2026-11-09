@@ -17,4 +17,4 @@ HIDSharp is Copyright 2010-2025 James F. Bellinger. It is licensed under the Apa
 
 ## Not included
 
-The [PawnIO driver](https://pawnio.eu/) is not part of Simple Temp. You install it yourself, under its own license, by following the [setup guide](SETUP.md).
+The [PawnIO driver](https://pawnio.eu/) is not part of Simple Temp, and has its own license. When PawnIO is missing, the installer tells you, then downloads it from [its official release](https://github.com/namazso/PawnIO.Setup/releases) and installs it.

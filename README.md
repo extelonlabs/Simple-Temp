@@ -17,16 +17,15 @@
 
 ## Get it
 
-1. Download `SimpleTemp-win-x64.zip` from the [latest release](https://github.com/extelonlabs/Simple-Temp/releases/latest).
-2. Follow the [setup guide](SETUP.md). It takes about 2 minutes.
+**[Download SimpleTemp.exe](https://github.com/extelonlabs/Simple-Temp/releases/latest/download/SimpleTemp.exe)** and double-click it. It installs itself and opens. See the [setup guide](SETUP.md) if Windows warns you.
 
-It needs 64-bit Windows, and nothing else to run the app. CPU temp also needs the free [PawnIO](https://pawnio.eu/) driver. The setup guide covers that.
+It needs 64-bit Windows and an admin account. If the free [PawnIO](https://pawnio.eu/) driver is missing, the installer adds it, because CPU temp needs it.
 
 ## Good to know
 
 **Why it needs admin rights:** Windows only lets admin programs read the CPU temp sensor. Setup asks you once, then makes a scheduled task that opens the app as admin with no prompt. The trade-off is that a bad program already on your PC would have an easier path to admin rights. The app sits in Program Files, where normal programs can't change it, to reduce that risk.
 
-**It isn't code-signed:** Windows SmartScreen may warn you when you run the installer. The setup guide shows what to do.
+**It isn't code-signed:** your browser or Windows SmartScreen may warn you. The setup guide shows what to do.
 
 **What it's tested on:** Windows 11, an Intel i7-13700K and an NVIDIA RTX 4070 Ti. Other hardware should work, but it's untested. If a number shows `—`, please [open an issue](https://github.com/extelonlabs/Simple-Temp/issues).
 
@@ -40,7 +39,7 @@ You need the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 dotnet publish -c Release -o dist
 ```
 
-Then run `install.cmd`. It installs the build from `dist`.
+Then double-click `dist\SimpleTemp.exe` to install your build. To open it without installing, run `dist\SimpleTemp.exe --no-install`.
 
 ## Credits
 

@@ -6,6 +6,10 @@ using System.Security.Principal;
 
 namespace Temperature;
 
+/// <summary>
+/// The full window. It reads the sensors once a second on a background thread, draws the
+/// temperature and usage bars, and owns the mini bar, tray icon and startup options.
+/// </summary>
 public sealed class MainForm : Form
 {
     private const int UpdateMs = 1000;

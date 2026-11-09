@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 
 namespace Temperature;
 
-/// <summary>A thin text-only bar at the top middle of the screen, on top of other windows.</summary>
+/// <summary>
+/// A thin text-only bar at the top middle of the screen, on top of other windows.
+/// Double-click it to open the full window, or right-click it for a menu.
+/// </summary>
 public sealed class MiniBar : Form
 {
     // These go in CreateParams. Using the normal TopMost setting would make the bar grab focus when it shows.

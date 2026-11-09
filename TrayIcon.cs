@@ -4,7 +4,10 @@ using System.Runtime.InteropServices;
 
 namespace Temperature;
 
-/// <summary>The icon by the clock. It shows the CPU temp as a number, and all the numbers on hover.</summary>
+/// <summary>
+/// The icon by the clock. It shows the CPU temp as a number, and all the numbers on hover.
+/// Left-click it to open the full window, or right-click it for a menu.
+/// </summary>
 internal sealed class TrayIcon : IDisposable
 {
     private const int MaxTooltipLength = 127; // Windows refuses anything longer.
