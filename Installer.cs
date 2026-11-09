@@ -23,6 +23,9 @@ internal static class Installer
     /// <summary>Install, or uninstall with --uninstall, with no windows and no questions.</summary>
     public const string SilentArg = "--silent";
 
+    /// <summary>Names the normal-window copy waiting on this admin copy, so uninstall doesn't stop it.</summary>
+    private const string CallerArg = "--caller=";
+
     /// <summary>For testing a build: open the app and don't try to install it.</summary>
     public const string NoInstallArg = "--no-install";
 
@@ -30,7 +33,8 @@ internal static class Installer
     // The hash means only this exact file can ever run. It comes from the Windows Package Manager listing.
     private const string PawnIoUrl = "https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe";
     private const string PawnIoSha256 = "1F519A22E47187F70A1379A48CA604981C4FCF694F4E65B734AAA74A9FBA3032";
-    private const string PawnIoServiceKey = @"SYSTEM\CurrentControlSet\Services\PawnIO";
+    // Its entry in Settings > Apps. Its service can't tell us: that stays behind after PawnIO is uninstalled.
+    private const string PawnIoAppKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PawnIO";
     private const int RestartNeeded = 3010;
 
     private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\SimpleTemp";
@@ -48,7 +52,7 @@ internal static class Installer
     {
         get
         {
-            using var key = Registry.LocalMachine.OpenSubKey(PawnIoServiceKey);
+            using var key = Registry.LocalMachine.OpenSubKey(PawnIoAppKey);
             return key is not null;
         }
     }
@@ -315,7 +319,7 @@ internal static class Installer
         {
             try
             {
-                var start = new ProcessStartInfo(Environment.ProcessPath!, UninstallArg) { UseShellExecute = true, Verb = "runas" };
+                var start = new ProcessStartInfo(Environment.ProcessPath!, $"{UninstallArg} {CallerArg}{Environment.ProcessId}") { UseShellExecute = true, Verb = "runas" };
                 using var elevated = Process.Start(start);
                 elevated!.WaitForExit();
                 return elevated.ExitCode;
@@ -343,7 +347,7 @@ internal static class Installer
         {
             try
             {
-                var start = new ProcessStartInfo(Environment.ProcessPath!, $"{UninstallArg} {SilentArg}") { UseShellExecute = true, Verb = "runas" };
+                var start = new ProcessStartInfo(Environment.ProcessPath!, $"{UninstallArg} {SilentArg} {CallerArg}{Environment.ProcessId}") { UseShellExecute = true, Verb = "runas" };
                 using var elevated = Process.Start(start);
                 elevated!.WaitForExit();
                 return elevated.ExitCode;
@@ -396,11 +400,16 @@ internal static class Installer
         AutoStart.StopTask(AdminTask.TaskName);
         AutoStart.StopTask(AutoStart.TaskName);
 
+        // A copy uninstalling from a normal window runs from this same folder and waits for this one.
+        // Stopping it would throw away the exit code it's waiting to pass on.
+        string? callerArg = Environment.GetCommandLineArgs().FirstOrDefault(a => a.StartsWith(CallerArg, StringComparison.Ordinal));
+        int? caller = int.TryParse(callerArg?[CallerArg.Length..], out int id) ? id : null;
+
         foreach (var process in Process.GetProcessesByName("SimpleTemp"))
         {
             using (process)
             {
-                if (process.Id == Environment.ProcessId) continue;
+                if (process.Id == Environment.ProcessId || process.Id == caller) continue;
                 try
                 {
                     if (!string.Equals(process.MainModule?.FileName, AdminTask.InstalledExe, StringComparison.OrdinalIgnoreCase)) continue;
