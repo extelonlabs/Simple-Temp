@@ -2,7 +2,7 @@
 
 <h1 align="center">Simple Temp</h1>
 
-<p align="center">A small Windows app that shows your CPU and GPU temperature, CPU and GPU usage, and RAM usage.</p>
+<p align="center">A free CPU and GPU temperature monitor for Windows. It also shows CPU, GPU and RAM usage, in a small window, an always-on-top mini bar and a tray icon.</p>
 
 <p align="center"><img src="assets/screenshot.png" width="402" alt="The Simple Temp window, showing CPU and GPU temperature and usage, and RAM usage"></p>
 
