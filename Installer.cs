@@ -11,12 +11,17 @@ namespace Temperature;
 /// 2. CopyToProgramFiles, as admin, still in your download folder: does as little as it can there,
 ///    because any program can drop files in that folder. It copies the exe, then starts step 3.
 /// 3. Finish, as admin, from the protected folder: does the rest.
+/// With --silent, as package managers like winget need, it skips the question in step 1 and shows no windows.
+/// That can't skip the admin check: from a normal window, Windows still shows its prompt.
 /// </summary>
 internal static class Installer
 {
     public const string InstallArg = "--install";
     public const string FinishArg = "--install-finish";
     public const string UninstallArg = "--uninstall";
+
+    /// <summary>Install, or uninstall with --uninstall, with no windows and no questions.</summary>
+    public const string SilentArg = "--silent";
 
     /// <summary>For testing a build: open the app and don't try to install it.</summary>
     public const string NoInstallArg = "--no-install";
@@ -99,8 +104,25 @@ internal static class Installer
         return MessageBox.Show(message, Title, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK;
     }
 
+    /// <summary>Installs with no windows of its own. From a normal window, Windows still shows its admin prompt.</summary>
+    public static int InstallSilently()
+    {
+        if (MainForm.IsAdmin()) return CopyToProgramFiles(silent: true);
+        try
+        {
+            var start = new ProcessStartInfo(Environment.ProcessPath!, SilentArg) { UseShellExecute = true, Verb = "runas" };
+            using var elevated = Process.Start(start);
+            elevated!.WaitForExit();
+            return elevated.ExitCode;
+        }
+        catch (Win32Exception ex) when (ex.NativeErrorCode == ErrorCancelled)
+        {
+            return ErrorCancelled;
+        }
+    }
+
     /// <summary>Step 2. Runs as admin from an unprotected folder, so it shows no windows and loads as little as it can.</summary>
-    public static int CopyToProgramFiles()
+    public static int CopyToProgramFiles(bool silent = false)
     {
         if (!MainForm.IsAdmin()) return 1;
         try
@@ -118,7 +140,8 @@ internal static class Installer
             }
             File.WriteAllText(LogPath, $"Copied app to {InstallDir}{Environment.NewLine}");
 
-            var start = new ProcessStartInfo(AdminTask.InstalledExe, FinishArg) { UseShellExecute = false, WorkingDirectory = InstallDir };
+            string args = silent ? $"{FinishArg} {SilentArg}" : FinishArg;
+            var start = new ProcessStartInfo(AdminTask.InstalledExe, args) { UseShellExecute = false, WorkingDirectory = InstallDir };
             using var finish = Process.Start(start);
             finish!.WaitForExit();
             return finish.ExitCode;
@@ -134,13 +157,31 @@ internal static class Installer
     public static int Finish()
     {
         if (!MainForm.IsAdmin() || !AdminTask.IsInstalledCopy) return 1;
-        using var window = new InstallWindow(FinishSteps);
+        using var window = new InstallWindow(status => FinishSteps(status, checkSensors: true));
         Application.Run(window);
         return window.ExitCode;
     }
 
+    /// <summary>Step 3 with no window. Messages go to the log, and failures go to the exit code.</summary>
+    public static int FinishSilently()
+    {
+        if (!MainForm.IsAdmin() || !AdminTask.IsInstalledCopy) return 1;
+        try
+        {
+            // The sensor check is only skipped because nobody is there to read its result right away.
+            string? note = Task.Run(() => FinishSteps(_ => { }, checkSensors: false)).GetAwaiter().GetResult();
+            if (note is not null) TryLog(note);
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            TryLog("FAILED: " + ex);
+            return 3;
+        }
+    }
+
     /// <summary>Returns a message to show when done, or null. Throws if the app itself couldn't be set up.</summary>
-    private static async Task<string?> FinishSteps(Action<string> status)
+    private static async Task<string?> FinishSteps(Action<string> status, bool checkSensors)
     {
         status("Setting up Simple Temp...");
         WriteNotices();
@@ -163,8 +204,11 @@ internal static class Installer
             note = await InstallPawnIo();
         }
 
-        status("Checking the sensors...");
-        LogSensorCheck();
+        if (checkSensors)
+        {
+            status("Checking the sensors...");
+            LogSensorCheck();
+        }
         return note;
     }
 
@@ -199,6 +243,7 @@ internal static class Installer
         key.SetValue("DisplayIcon", AdminTask.InstalledExe);
         key.SetValue("InstallLocation", InstallDir);
         key.SetValue("UninstallString", $"\"{AdminTask.InstalledExe}\" {UninstallArg}");
+        key.SetValue("QuietUninstallString", $"\"{AdminTask.InstalledExe}\" {UninstallArg} {SilentArg}");
         key.SetValue("URLInfoAbout", "https://github.com/extelonlabs/Simple-Temp");
         key.SetValue("EstimatedSize", (int)(new FileInfo(AdminTask.InstalledExe).Length / 1024), RegistryValueKind.DWord);
         key.SetValue("NoModify", 1, RegistryValueKind.DWord);
@@ -285,15 +330,55 @@ internal static class Installer
             MessageBoxButtons.YesNo, MessageBoxIcon.Question);
         if (answer != DialogResult.Yes) return 0;
 
+        RemoveApp();
+        MessageBox.Show("Simple Temp is removed.", Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        RemoveFolderAfterExit();
+        return 0;
+    }
+
+    /// <summary>Uninstalls with no boxes. From a normal window, Windows still shows its admin prompt.</summary>
+    public static int UninstallSilently()
+    {
+        if (!MainForm.IsAdmin())
+        {
+            try
+            {
+                var start = new ProcessStartInfo(Environment.ProcessPath!, $"{UninstallArg} {SilentArg}") { UseShellExecute = true, Verb = "runas" };
+                using var elevated = Process.Start(start);
+                elevated!.WaitForExit();
+                return elevated.ExitCode;
+            }
+            catch (Win32Exception ex) when (ex.NativeErrorCode == ErrorCancelled)
+            {
+                return ErrorCancelled;
+            }
+        }
+
+        try
+        {
+            RemoveApp();
+            RemoveFolderAfterExit();
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            TryLog("FAILED: " + ex);
+            return 3;
+        }
+    }
+
+    private static void RemoveApp()
+    {
         StopRunningCopies();
         AutoStart.DeleteTask(AdminTask.TaskName);
         AutoStart.DeleteTask(AutoStart.TaskName);
         File.Delete(DesktopShortcut);
         File.Delete(StartMenuShortcut);
         Registry.LocalMachine.DeleteSubKey(UninstallKey, throwOnMissingSubKey: false);
+    }
 
-        MessageBox.Show("Simple Temp is removed.", Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
-
+    private static void RemoveFolderAfterExit()
+    {
         // A running exe can't delete itself, so a hidden helper does it a moment after this one quits.
         // It tries a few times, because something else can hold the folder open for a moment.
         var cleanup = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"),
@@ -304,7 +389,6 @@ internal static class Installer
             WorkingDirectory = Environment.SystemDirectory,
         };
         using (Process.Start(cleanup)) { }
-        return 0;
     }
 
     private static void StopRunningCopies()
