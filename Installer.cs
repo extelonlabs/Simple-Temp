@@ -33,7 +33,8 @@ internal static class Installer
     // The hash means only this exact file can ever run. It comes from the Windows Package Manager listing.
     private const string PawnIoUrl = "https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe";
     private const string PawnIoSha256 = "1F519A22E47187F70A1379A48CA604981C4FCF694F4E65B734AAA74A9FBA3032";
-    private const string PawnIoServiceKey = @"SYSTEM\CurrentControlSet\Services\PawnIO";
+    // Its entry in Settings > Apps. Its service can't tell us: that stays behind after PawnIO is uninstalled.
+    private const string PawnIoAppKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PawnIO";
     private const int RestartNeeded = 3010;
 
     private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\SimpleTemp";
@@ -51,7 +52,7 @@ internal static class Installer
     {
         get
         {
-            using var key = Registry.LocalMachine.OpenSubKey(PawnIoServiceKey);
+            using var key = Registry.LocalMachine.OpenSubKey(PawnIoAppKey);
             return key is not null;
         }
     }
