@@ -8,6 +8,12 @@ internal static class Program
     private static int Main(string[] args)
     {
         if (args.Contains("--probe")) return Probe();
+        if (args.Contains(Installer.SilentArg))
+        {
+            if (args.Contains(Installer.UninstallArg)) return Installer.UninstallSilently();
+            if (args.Contains(Installer.FinishArg)) return Installer.FinishSilently();
+            return Installer.InstallSilently();
+        }
         if (args.Contains(Installer.InstallArg)) return Installer.CopyToProgramFiles();
 
         Application.SetHighDpiMode(HighDpiMode.SystemAware);
