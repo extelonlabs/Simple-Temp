@@ -1,3 +1,4 @@
+# Build output and local files that stay out of the repo.
 bin/
 obj/
 dist/
