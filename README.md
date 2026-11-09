@@ -27,6 +27,8 @@ It needs 64-bit Windows and an admin account. If the free [PawnIO](https://pawni
 
 **It isn't code-signed:** your browser or Windows SmartScreen may warn you. The setup guide shows what to do.
 
+**Virus scan:** for version 1.1.0, [VirusTotal](https://www.virustotal.com/gui/file/122b2ef58a928c53e61da58b95f385c3ff91bdae8bc4a7ec63b8a30c1d164df5) shows 0 of 69 scanners flagged `SimpleTemp.exe`. VirusTotal checks a file with many antivirus programs.
+
 **What it's tested on:** Windows 11, an Intel i7-13700K and an NVIDIA RTX 4070 Ti. Other hardware should work, but it's untested. If a number shows `—`, please [open an issue](https://github.com/extelonlabs/Simple-Temp/issues).
 
 **Exclusive fullscreen games:** the mini bar can't draw over them. Use borderless window mode instead.
