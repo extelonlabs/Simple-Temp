@@ -19,6 +19,14 @@
 
 **[Download SimpleTemp.exe](https://github.com/extelonlabs/Simple-Temp/releases/latest/download/SimpleTemp.exe)** and double-click it. It installs itself and opens. See the [setup guide](SETUP.md) if Windows warns you.
 
+Or install it with winget, Windows' built-in app installer:
+
+```
+winget install simpletemp
+```
+
+If winget asks you to pick an app, use `winget install extelonlabs.SimpleTemp`.
+
 It needs 64-bit Windows and an admin account. If the free [PawnIO](https://pawnio.eu/) driver is missing, the installer adds it, because CPU temp needs it.
 
 ## Good to know
